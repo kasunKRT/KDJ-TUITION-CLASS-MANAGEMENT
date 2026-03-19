@@ -12,8 +12,8 @@
         <q-btn flat label="Testimonials" class="q-mr-lg text-weight-medium text-capitalize" />
       </div>
       <div class="gt-xs row items-center">
-        <q-btn outline label="Login" color="secondary" class="q-mr-sm q-px-md text-capitalize text-weight-bold" style="border-radius: 8px;" />
-        <q-btn unelevated label="Get Started" color="secondary" text-color="primary" class="q-px-md text-capitalize text-weight-bold" style="border-radius: 8px;" />
+        <q-btn outline label="Login" to="/login" color="secondary" class="q-mr-sm q-px-md text-capitalize text-weight-bold" style="border-radius: 8px;" />
+        <q-btn unelevated label="Get Started" to="/register" color="secondary" text-color="primary" class="q-px-md text-capitalize text-weight-bold" style="border-radius: 8px;" />
       </div>
       <q-btn flat dense icon="menu" class="lt-sm" color="secondary" />
     </q-toolbar>
@@ -38,7 +38,7 @@
           The completely free and open-source management system designed specifically for tuition centers and independent tutors. Fast, reliable, beautifully minimal, and costs you absolutely nothing.
         </p>
         <div class="row q-gutter-sm q-gutter-md-md justify-start col-12">
-          <q-btn size="lg" unelevated label="Start for free" color="secondary" text-color="primary" class="full-width-xs q-px-xl text-weight-bold text-capitalize shadow-10" style="border-radius: 10px;" />
+          <q-btn size="lg" unelevated label="Start for free" to="/register" color="secondary" text-color="primary" class="full-width-xs q-px-xl text-weight-bold text-capitalize shadow-10" style="border-radius: 10px;" />
           <q-btn size="lg" outline label="Learn more" color="secondary" class="full-width-xs q-px-xl text-capitalize text-weight-bold" style="border-radius: 10px;" />
         </div>
         
@@ -120,7 +120,7 @@
         <h2 class="text-weight-bolder q-mb-lg" style="letter-spacing: -1.5px; line-height: 1.1;">Ready to elevate your classes?</h2>
         <p class="text-h5 text-grey-8 q-mb-xl text-weight-regular">Join hundreds of tutors who are already managing their classes seamlessly with ClassMaster.</p>
         <div class="row justify-center q-gutter-sm q-gutter-md-md">
-          <q-btn size="lg" unelevated label="Create your account" color="primary" text-color="secondary" class="full-width-xs q-px-xl text-weight-bold text-capitalize" style="border-radius: 12px; box-shadow: 0 10px 20px rgba(0,0,0,0.2);" />
+          <q-btn size="lg" unelevated label="Create your account" to="/register" color="primary" text-color="secondary" class="full-width-xs q-px-xl text-weight-bold text-capitalize" style="border-radius: 12px; box-shadow: 0 10px 20px rgba(0,0,0,0.2);" />
           <q-btn size="lg" outline label="View on GitHub" icon="code" color="primary" class="full-width-xs q-px-xl text-weight-bold text-capitalize" style="border-radius: 12px; border-width: 2px;" />
         </div>
       </div>
