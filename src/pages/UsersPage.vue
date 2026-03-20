@@ -239,25 +239,16 @@ const loadUsers = async () => {
     const { data: { session } } = await supabase.auth.getSession()
     if (!session) throw new Error('Not authenticated')
 
-    const response = await fetch(
-      `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/list-users`,
-      {
-        headers: {
-          Authorization: `Bearer ${session.access_token}`,
-          'Content-Type': 'application/json',
-        },
-      }
-    )
+    const { data, error } = await supabase.functions.invoke('list-users', {
+      method: 'GET',
+    })
 
-    if (!response.ok) {
-      const err = await response.json()
-      throw new Error(err.error || 'Failed to fetch users')
+    if (error) {
+      throw new Error(error.message || 'Failed to fetch users')
     }
 
-    const { users: rawUsers } = await response.json()
-
     // Map to UI format
-    users.value = rawUsers.map((u, idx) => ({
+    users.value = data.users.map((u, idx) => ({
       ...u,
       initials: u.name
         ? u.name.split(' ').map(w => w[0]).join('').substring(0, 2).toUpperCase()
@@ -265,7 +256,8 @@ const loadUsers = async () => {
       avatarColor: avatarColors[idx % avatarColors.length],
     }))
   } catch (err) {
-    $q.notify({ type: 'negative', message: err.message || 'Failed to load users', position: 'top-right' })
+    console.error(err)
+    $q.notify({ type: 'negative', message: 'Failed to load users: ' + (err.message || ''), position: 'top-right' })
   } finally {
     loading.value = false
   }
