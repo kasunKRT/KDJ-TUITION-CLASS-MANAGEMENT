@@ -7,10 +7,10 @@
         <div class="text-subtitle1 text-grey-6 q-mt-xs">View, invite and manage user accounts.</div>
       </div>
       <q-btn
-        unelevated color="primary" icon="person_add" label="Invite User"
+        unelevated color="primary" icon="person_add" label="Add User"
         class="text-weight-bold q-px-md shadow-2"
         style="border-radius: 8px; text-transform: none;"
-        @click="inviteDialog = true"
+        @click="addUserDialog = true"
       />
     </div>
 
@@ -125,6 +125,10 @@
                       {{ props.row.status === 'Active' ? 'Deactivate' : 'Activate' }}
                     </q-item-section>
                   </q-item>
+                  <q-item clickable v-close-popup class="action-menu-item" @click="deleteUser(props.row)">
+                    <q-item-section avatar><q-icon name="delete" color="negative" size="sm"/></q-item-section>
+                    <q-item-section class="text-negative text-weight-bold">Delete</q-item-section>
+                  </q-item>
                 </q-list>
               </q-menu>
             </q-btn>
@@ -136,34 +140,38 @@
           <div class="full-width column flex-center q-py-xl text-grey-5">
             <q-icon name="people_outline" size="64px" class="q-mb-md opacity-50" />
             <div class="text-h6 text-weight-bold">No users found</div>
-            <div class="text-caption q-mt-xs">Try adjusting your filters or invite a new user</div>
+            <div class="text-caption q-mt-xs">Try adjusting your filters or add a new user</div>
           </div>
         </template>
       </q-table>
     </q-card>
 
-    <!-- Invite User Dialog -->
-    <q-dialog v-model="inviteDialog" backdrop-filter="blur(4px)">
+    <!-- Add User Dialog -->
+    <q-dialog v-model="addUserDialog" backdrop-filter="blur(4px)">
       <q-card style="min-width: 440px; border-radius: 16px;">
         <q-card-section class="q-pa-xl">
-          <div class="text-h6 text-weight-bolder text-dark q-mb-xs">Invite New User</div>
-          <div class="text-caption text-grey-6 q-mb-xl">An invitation email will be sent to the user.</div>
-          <q-form @submit.prevent="submitInvite" class="q-gutter-md">
+          <div class="text-h6 text-weight-bolder text-dark q-mb-xs">Add New User</div>
+          <div class="text-caption text-grey-6 q-mb-xl">Create a new user account manually.</div>
+          <q-form @submit.prevent="submitAddUser" class="q-gutter-md">
             <div>
               <div class="text-subtitle2 text-weight-bold text-dark q-mb-sm">Full Name</div>
-              <q-input v-model="inviteForm.name" outlined dense color="primary" placeholder="e.g. Kamal Perera" />
+              <q-input v-model="addUserForm.name" outlined dense color="primary" placeholder="e.g. Kamal Perera" />
             </div>
             <div>
               <div class="text-subtitle2 text-weight-bold text-dark q-mb-sm">Email Address</div>
-              <q-input v-model="inviteForm.email" outlined dense color="primary" placeholder="user@example.com" />
+              <q-input v-model="addUserForm.email" outlined dense color="primary" placeholder="user@example.com" />
+            </div>
+            <div>
+              <div class="text-subtitle2 text-weight-bold text-dark q-mb-sm">Password</div>
+              <q-input v-model="addUserForm.password" type="password" outlined dense color="primary" placeholder="••••••••" />
             </div>
             <div>
               <div class="text-subtitle2 text-weight-bold text-dark q-mb-sm">Assign Role</div>
-              <q-select v-model="inviteForm.role" :options="roleOptions" emit-value map-options outlined dense color="primary" />
+              <q-select v-model="addUserForm.role" :options="roleOptions.filter(r => r.value !== null)" emit-value map-options outlined dense color="primary" />
             </div>
             <div class="row justify-end q-gutter-sm q-pt-md">
               <q-btn flat label="Cancel" color="grey-7" class="text-weight-bold" v-close-popup />
-              <q-btn unelevated label="Send Invite" color="primary" type="submit" class="text-weight-bold q-px-lg shadow-2" style="border-radius: 8px;" />
+              <q-btn unelevated label="Add User" color="primary" type="submit" class="text-weight-bold q-px-lg shadow-2" style="border-radius: 8px;" />
             </div>
           </q-form>
         </q-card-section>
@@ -185,6 +193,30 @@
       </q-card>
     </q-dialog>
 
+    <!-- Edit User Dialog -->
+    <q-dialog v-model="editUserDialog" backdrop-filter="blur(4px)">
+      <q-card style="min-width: 440px; border-radius: 16px;">
+        <q-card-section class="q-pa-xl">
+          <div class="text-h6 text-weight-bolder text-dark q-mb-xs">Edit User</div>
+          <div class="text-caption text-grey-6 q-mb-xl">Update details for the user.</div>
+          <q-form @submit.prevent="saveUserDetails" class="q-gutter-md">
+            <div>
+              <div class="text-subtitle2 text-weight-bold text-dark q-mb-sm">Full Name</div>
+              <q-input v-model="editUserForm.name" outlined dense color="primary" placeholder="e.g. Kamal Perera" />
+            </div>
+            <div>
+              <div class="text-subtitle2 text-weight-bold text-dark q-mb-sm">Email Address</div>
+              <q-input v-model="editUserForm.email" outlined dense color="primary" placeholder="user@example.com" />
+            </div>
+            <div class="row justify-end q-gutter-sm q-pt-md">
+              <q-btn flat label="Cancel" color="grey-7" class="text-weight-bold" v-close-popup />
+              <q-btn unelevated label="Save Changes" color="primary" type="submit" class="text-weight-bold q-px-lg shadow-2" style="border-radius: 8px;" />
+            </div>
+          </q-form>
+        </q-card-section>
+      </q-card>
+    </q-dialog>
+
   </q-page>
 </template>
 
@@ -199,12 +231,14 @@ const loading = ref(false)
 const search = ref('')
 const filterRole = ref(null)
 const filterStatus = ref(null)
-const inviteDialog = ref(false)
+const addUserDialog = ref(false)
 const changeRoleDialog = ref(false)
+const editUserDialog = ref(false)
 const selectedUser = ref(null)
 const newRole = ref(null)
 
-const inviteForm = ref({ name: '', email: '', role: 'Student' })
+const editUserForm = ref({ id: '', name: '', email: '' })
+const addUserForm = ref({ name: '', email: '', password: '', role: 'Student' })
 
 const roleOptions = [
   { label: 'All Roles', value: null },
@@ -284,7 +318,65 @@ const getRoleColor = (role) => {
 }
 
 const editUser = (user) => {
-  $q.notify({ type: 'info', message: `Edit coming soon for: ${user.name}`, position: 'top-right' })
+  editUserForm.value = { id: user.id, name: user.name, email: user.email }
+  editUserDialog.value = true
+}
+
+const saveUserDetails = async () => {
+  if (!editUserForm.value.name || !editUserForm.value.email) {
+    $q.notify({ type: 'warning', message: 'Name and email are required.', position: 'top-right' })
+    return
+  }
+
+  try {
+    $q.loading.show({ message: 'Saving details...' })
+    const { error } = await supabase.functions.invoke('update-user-details', {
+      body: { userId: editUserForm.value.id, name: editUserForm.value.name, email: editUserForm.value.email }
+    })
+
+    if (error) throw new Error(error.message || 'Failed to update details')
+
+    const userIndex = users.value.findIndex(u => u.id === editUserForm.value.id)
+    if (userIndex !== -1) {
+      users.value[userIndex].name = editUserForm.value.name
+      users.value[userIndex].email = editUserForm.value.email
+    }
+
+    $q.notify({ type: 'positive', message: 'User details updated successfully!', position: 'top-right' })
+    editUserDialog.value = false
+  } catch (err) {
+    console.error(err)
+    $q.notify({ type: 'negative', message: 'Failed to update user: ' + (err.message || 'Unknown error'), position: 'top-right' })
+  } finally {
+    $q.loading.hide()
+  }
+}
+
+const deleteUser = (user) => {
+  $q.dialog({
+    title: 'Confirm Deletion',
+    message: `Are you sure you want to completely delete ${user.name}? This action cannot be undone.`,
+    persistent: true,
+    ok: { color: 'negative', label: 'Delete', unelevated: true, style: 'border-radius: 8px;' },
+    cancel: { flat: true, color: 'grey-7', style: 'border-radius: 8px;' }
+  }).onOk(async () => {
+    try {
+      $q.loading.show({ message: 'Deleting user...' })
+      const { error } = await supabase.functions.invoke('delete-user', {
+        body: { userId: user.id }
+      })
+
+      if (error) throw new Error(error.message || 'Failed to delete user')
+
+      users.value = users.value.filter(u => u.id !== user.id)
+      $q.notify({ type: 'positive', message: `${user.name} has been deleted.`, position: 'top-right' })
+    } catch (err) {
+      console.error(err)
+      $q.notify({ type: 'negative', message: 'Failed to delete user: ' + (err.message || 'Unknown error'), position: 'top-right' })
+    } finally {
+      $q.loading.hide()
+    }
+  })
 }
 
 const changeRole = (user) => {
@@ -293,37 +385,81 @@ const changeRole = (user) => {
   changeRoleDialog.value = true
 }
 
-const toggleStatus = (user) => {
-  user.status = user.status === 'Active' ? 'Inactive' : 'Active'
-  $q.notify({
-    type: user.status === 'Active' ? 'positive' : 'warning',
-    message: `${user.name} has been ${user.status === 'Active' ? 'activated' : 'deactivated'}.`,
-    position: 'top-right'
-  })
-}
+const toggleStatus = async (user) => {
+  const previousStatus = user.status
+  const newStatus = previousStatus === 'Active' ? 'Inactive' : 'Active'
+  
+  try {
+    $q.loading.show({ message: `Changing status to ${newStatus}...` })
+    const { error } = await supabase.functions.invoke('update-user-status', {
+      body: { userId: user.id, status: newStatus }
+    })
 
-const saveRoleChange = () => {
-  if (selectedUser.value && newRole.value) {
-    selectedUser.value.role = newRole.value
-    $q.notify({ type: 'positive', message: `Role updated to ${newRole.value}`, position: 'top-right' })
-    changeRoleDialog.value = false
+    if (error) {
+      throw new Error(error.message || 'Failed to update status')
+    }
+
+    user.status = newStatus
+    $q.notify({
+      type: newStatus === 'Active' ? 'positive' : 'warning',
+      message: `${user.name} has been ${newStatus === 'Active' ? 'activated' : 'deactivated'}.`,
+      position: 'top-right'
+    })
+  } catch (err) {
+    console.error(err)
+    $q.notify({ type: 'negative', message: 'Failed to update status: ' + (err.message || 'Unknown error'), position: 'top-right' })
+  } finally {
+    $q.loading.hide()
   }
 }
 
-const submitInvite = async () => {
-  if (!inviteForm.value.email) {
-    $q.notify({ type: 'warning', message: 'Please enter an email address.', position: 'top-right' })
+const saveRoleChange = async () => {
+  if (selectedUser.value && newRole.value) {
+    try {
+      $q.loading.show({ message: 'Updating role...' })
+      const { error } = await supabase.functions.invoke('update-user-role', {
+        body: { userId: selectedUser.value.id, role: newRole.value }
+      })
+
+      if (error) {
+        throw new Error(error.message || 'Failed to update role')
+      }
+
+      selectedUser.value.role = newRole.value
+      $q.notify({ type: 'positive', message: `Role updated to ${newRole.value}`, position: 'top-right' })
+      changeRoleDialog.value = false
+    } catch (err) {
+      console.error(err)
+      $q.notify({ type: 'negative', message: 'Failed to update user role: ' + (err.message || 'Unknown error'), position: 'top-right' })
+    } finally {
+      $q.loading.hide()
+    }
+  }
+}
+
+const submitAddUser = async () => {
+  if (!addUserForm.value.email || !addUserForm.value.password || !addUserForm.value.name) {
+    $q.notify({ type: 'warning', message: 'All fields are required.', position: 'top-right' })
     return
   }
 
   try {
-    // Note: actual invite requires admin API - for now notify success and refresh
-    $q.notify({ type: 'positive', message: `Invite sent to ${inviteForm.value.email}!`, position: 'top-right' })
-    inviteForm.value = { name: '', email: '', role: 'Student' }
-    inviteDialog.value = false
+    $q.loading.show({ message: 'Creating user...' })
+    const { error } = await supabase.functions.invoke('create-user', {
+      body: addUserForm.value
+    })
+    
+    if (error) throw new Error(error.message || 'Failed to create user')
+
+    $q.notify({ type: 'positive', message: `User ${addUserForm.value.name} created!`, position: 'top-right' })
+    addUserForm.value = { name: '', email: '', password: '', role: 'Student' }
+    addUserDialog.value = false
     await loadUsers()
   } catch (err) {
-    $q.notify({ type: 'negative', message: err.message, position: 'top-right' })
+    console.error(err)
+    $q.notify({ type: 'negative', message: err.message || 'Unknown error', position: 'top-right' })
+  } finally {
+    $q.loading.hide()
   }
 }
 </script>

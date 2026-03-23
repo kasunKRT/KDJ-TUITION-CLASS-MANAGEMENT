@@ -88,6 +88,8 @@ const drawerOpen = computed({
 
 const mainLinks = [
   { title: 'Dashboard', icon: 'grid_view', route: '/dashboard' },
+  { title: 'Students & Enrollment', icon: 'badge', route: '/dashboard/students' },
+  { title: 'Classes & Subjects', icon: 'class', route: '/dashboard/classes' },
 ]
 
 const adminLinks = [
